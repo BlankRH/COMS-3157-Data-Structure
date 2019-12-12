@@ -1,0 +1,6 @@
+{
+    "preview": {
+        "Virtual Desktop": "https://{{domain3000}}/"
+    },
+  "debugger": [{"type":"JAVA","command":"-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5105","before":"","uuid":"4cc50829-9f46-8c3d-7f3d-b1edff7ebbcc","name":"TweetDB"}]
+}
