@@ -665,18 +665,11 @@ $$hash(x)+f(i))%TableSize$$
 - Remove all N items an reinsert, O(N)
 
 ## Priority Queues(Binary Heaps)
-### Round Robin Scheduling
-- idea: processes take turn running for a certain time interval in round robin fashion
 
 ### The Priority Queue ADT
 - a collection Q of comparable elements, that supports the folling operations
 	+ insert(x)
 	+ deleteMin(), return the min
-
-### Applications for Priority Queues
-- selection problem
-- implementing sort efficiently
-- implementing greedy algorithms
 
 ### Implementing Priority Queues
 1. Linked List
@@ -692,25 +685,281 @@ $$hash(x)+f(i))%TableSize$$
 
 ### Heap
 a heap is a complete binary tree stored in an array, with the follwing **heap order property**: for every node n with value x, the values of all nodes in the subtree rooted in n are greater or equal than x
+
+#### Representations
+- array: leftChild(i) = 2i, rightChild(i) = 2i+1, parent(i) = i/2
+
+#### Property
+- complete binary tree
+- for every node, the values of all nodes in the subtree are greater or equal to x
+
 #### Max Heap
 #### Min Heap
 - insert(x): attempt to insert at last array position
 	+ if heap order violated, **percolate up**(swap with parent)
+	+ worst: O(log N)
 - deleteMin(): 
 	+ remove lowest item, creating an empty cell in the root
-	+ place last item in heap into root, if order violated, **percolate down**
-
-#### Running Time
-Worst case: insert/deleteMin: O(log N); getMin: O(1)
+	+ place last item in heap into root, if order violated, **percolate down**(swap w/ smaller child)
+	+ worst: O(log N)
+- getMin(): O(1)
 
 #### Building a heap bottom-up
+- start with an unordered array
 - precolateDown(i) assumes that both subtrees under i are already heaps
 	+ make sure all subtrees in the two last layers are heaps
 	+ then move up layer by layer
-	+ for i = n/2 ... 1 precolateDown(i)
-- running time: worst-O(n)
+``` java
+	+ for i = n/2 ... 1 
+		precolateDown(i)
+```
+- worst running time: O(n)
 
-### The Selection Problem
-Given an unordered sequence of N numbers, select the k-th largest number
-1. Sort, O(nlogn+k)
-2. initialize array of size k with the first k numbers, sort the arrat. for every element, replace smallest with new number, O(klogk)+O(nk)
+## Sorting
+### Insertion sort
+1. perform N passes through the array, p = 1...N-1
+2. assume array[0...p-1] is already sorted
+3. take the element x at position p
+4. repeatedly swap x with its left neighbor until x is in the correct position
+
+### Selection sort
+1. perform N passes through the array, p = 0...N-1
+2. assume array[0..p-1] is already sorted
+3. find the minimum element in the unsorted partition
+4. swap the element at position p with the minimum
+
+### Heap sort
+1. convert an unordered array into a heap in O(N) time
+2. perform N deleteMin operations to retrieve the elements in sorted order, each deleteMin is O(logN)
+- re-use the freed space after each deleteMin
+
+### Merge sort
+- split the array in half, recursively sort each half
+- merge the two sorted lists
+```java
+void mergeSort() {
+	if(left < right) {
+		int center = (left + right) / 2;
+		mergeSort(a, tmpArray, left, center);
+		mergeSort(a, tmpArray, center + 1, right);
+		merge(a, tmpArray, left, center + 1, right);
+	}
+}
+```
+
+#### Merge sorted sublists
+1. keep a pointers for each sub-list in the array
+2. in each step, compare the elements they point two
+3. if a[Actr] < a[Bctr], copy a[Actr] to tmp and advance Actr
+4. otherwise, copy a[Bctr] to the output and advance Bctr
+```java
+void merge() {
+	int leftEnd = bCtr - 1;
+	int tmpPos = aCtr;
+	int numElements = rightEnd - aCtr + 1;
+
+	while(aCtr <= leftEnd && bCtr <= rightEnd) {
+		if(a[aCtr].compareTo(a[bCtr]) <= 0)
+			tmpArray[tmpPos++] = a[aCtr++];
+		else
+			tmpArray[tmpPos++] = a[bCtr++];
+	}
+
+	while(aCtr <= leftEnd)
+		tmpArray[tmpPos++] = a[aCtr++];
+
+	while(bCtr <= rightEnd)
+		tmpArray[tmpPos++] = a[bCtr++];
+
+	for(int i = 0; i < numElements; i++, rightEnd--)
+		a[rightEnd] = tmpArray[rightEnd];
+}
+```
+
+### Quick sort
+1. pick any pivot element v
+2. partition the array into elements
+3. x <= v and x >= v
+4. recursively sort the partitions then concatenate them
+
+#### Partitioning the array
+```java
+void quicksort() {
+	if(right > left) {
+		int v = find_pivot_index(a, left, right);
+		int i = left; int j = right-1;
+
+		Integer tmp = a[v]; a[v] = a[right]; a[right] = tmp;
+
+		while(1) {
+			while(a[++i] < v) {};
+			while(a[--j] > v) {};
+			if(i >= j) break;
+			tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+		}
+
+		tmp = a[i]; a[i] = a[right]; a[right] = tmp;
+
+		quicksort(a, left, i-1); quicksort(a, i+1, right);
+	}
+}
+```
+
+#### Choosing pivot
+- worst: pivot is always the smallest or largest, O(N^2)
+- best: pivot is always the median, O(NlogN)
+- Median of Three
+
+### Sorting stability
+- stable if the relative order of duplicate items in the input is preserved
+
+### Analysis of Sorting Algorithms
+| | T<sub>worst</sub> | T<sub>best</sub> | T<sub>avg</sub> | Space | Stable |  
+| | ----------------- | ---------------- | --------------- | ----- | ------ |
+| Selection Sort | O(N^2) | O(N^2) | O(N^2) | O(1) | x |
+| Insertion Sort | O(N^2) | O(N) | O(N^2) | O(1) | √ |
+| Heap Sort | O(NlogN) | O(NlogN) | O(NlogN) | O(1) | x |
+| Merge Sort | O(NlogN) | O(NlogN) | O(NlogN) | O(N) | √ |
+| Quick Sort | O(N^2) | O(NlogN) | O(NlogN) | O(1) | x |
+
+## Graphs
+### Definitions
+- Graph: a pair of two sets G=(V, E):
+- V: the set of vertices
+- E: the set of edges
+- directed/undirected: edge pairs are (not) ordered
+- weight: cost associated with edges
+- simple path: a path that contains every node only once (except the first and last)
+- DAG: directed graph that contains no cycles
+- connectivity:
+	+ an undirected graph is connected if there is a path from every vertex to every other vertex
+	+ weakly connected: a directed graph that has undirected path from every vertex to every other vertex
+	+ strongly connected: a directed graph that has path from every vertex to every other vertex
+- complete graph: has edges between every pair of vertices, has \\(\frac{N \dot (N-1)}{2}\\) edges
+- dense / sparse: contain much less than |V|^2 edges?
+
+### Representations
+#### Adjacency matrix
+- N * N
+- A[u][v] = cost(u,v)
+- space: O(|V|^2), for sparse graphs, lot of array space wasted
+
+#### Adjacency lists
+- for each vertex, keep list of all adjacent vertices
+- space: O(|V| + |E|)
+
+#### Topological sorting
+- an ordering of its vertices such that if there is a path from u to w, u appears before w
+1. annotate each vertex with the number of **indegree**
+2. while the queue not empty, dequeue a vertex, print and decrement the indegree of adjacent nodes
+3. if the indegree of any new vertex becomes 0, enqueue it
+- O(|V|+|E|)
+
+#### BFS
+```java
+Queue q
+q.enqueue(start);
+start.visited = 1;
+while(!q.empty()) {
+	u = q.dequeue();
+
+	for(v in u.adjacent)
+		if(!v.visited)
+			q.enqueue(v);
+}
+```
+- unweighted shortest paths
+```java
+for all v:
+	v.cost = INT_MAX;
+	v.prev = null;
+
+start.cost = 0;
+
+Queue q
+q.enqueue(start)
+
+while(q is not empty)
+	u = q.dequeue;
+	
+	for each v adjacent to u:
+		if v.cost == INT_MAX
+			v.cost = u.cost + 1
+			v.prev = u
+			q.enqueue(v)
+```
+- O(|V|+|E|)
+
+#### Dijkstra's algorithm
+```java
+for all v:
+	v.cost = INT_MAX
+	v.visited = false
+	v.prev = null
+start.cost = 0
+
+PriorityQueue q
+q.insert(start)
+
+while(q is not empty):
+	u = q.pollMin()
+	u.visited = true
+
+	for each v adjacent to u:
+		if not v.visited:
+			c = u.cost + cost(u,v)
+			if(c < v.cost)
+				v.cost = c
+				v.prev = u
+				q.insert(v)
+```
+- running time O(|E|log|V|) = O(log|V|)
+
+#### Minimum Spanning Trees:
+- spanning tree: a tree that connects all vertices in an undirected connected graph; T is acyclic, there is a single path between any pair of vertices
+- Prim's algorithm
+```java
+for all v:
+	v.cost = INT_MAX;
+	v.visited = false;
+	v.prev = null;
+start.cost = 0;
+
+PriorityQueue q;
+q.insert(start)
+
+while(q is not empty):
+	u = q.pollMin();
+	u.visited = true;
+
+	for each v adjacent to u:
+		if not v.visited:
+			if(cost(u,v) < v.cost):
+				v.cost = cost(u,v)
+				v.prev = u
+				q.insert(v)
+```
+- Running time: O(|E|log|V|)
+
+#### Euler circuits
+- Euler paths: a path through an undirected graph that visits every edge exactly once
+- Euler Circuit: an Euler path that begins and ends at the same node
+- conditions:
+	+ euler path: exactly 0 or 2 vertices must have odd degree; start with one of the odd vertices and end in the other one
+	+ euler circuit: all vertices need to have even degree
+- finding euler circuits:
+1. start with any vertex s; use DFS find any circuit starting and ending in s; mark all edges on the circuit as visited
+2. while there are still edges in the graph that are not marked visited:
+3. find the first vertex v on the circuit that has unvisited edges
+4. find a circuit starting in v and splice this path into the first circuit
+
+#### Hamilton cycle
+- hamiltonian path: a path through an undirected graph that visits **every vertex** exactly once
+- hamiltonian cycle: a Hamiltonian Path that starts and ends in the same node
+- No polynomial time solution to if a graph contains a Hamiltonian path/cycle is known
+
+#### Traveling Salesperson Problem
+- TSP: given a complete, undirected graph G=(V,E), find the shortest simple cycle that visits all vertices
+- there are \\(\frac{(N-1)!}{2}\\) possibilities
+- Brute Force Approach: try all possible tours and return the shortest one; O(N!)
+- Nearest Neighbor: start with node D, always follow the lowest edge to an unvisited vertex until all vertices have been visited; not guaranteed to find an optimal solution
